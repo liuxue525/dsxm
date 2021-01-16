@@ -4,6 +4,7 @@ import Header from '@/components/common/Header'
 import Test from '@/components/Test'
 import Type from '@/components/shop/Type'
 import Pp from '@/components/shop/Pinpai'
+import Shuxing from '@/components/shop/Shuxing'
 Vue.use(Router)
 
 export default new Router({
@@ -29,6 +30,10 @@ export default new Router({
           path: '/Pp',
           component: () => import(/* webpackChunkName: "dashboard" */ '../components/shop/Pinpai.vue'),
           meta: { title: '品牌管理' }
+        },{
+          path: '/Shuxing',
+          component: () => import(/* webpackChunkName: "dashboard" */ '../components/shop/Shuxing.vue'),
+          meta: { title: '属性管理' }
         }
 
       ]

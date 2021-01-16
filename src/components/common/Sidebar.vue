@@ -73,7 +73,12 @@ export default {
                   {
                     index: 'Pp',
                     title: '品牌管理'
-                  }]
+                  },
+                  {
+                    index: 'Shuxing',
+                    title: '属性管理'
+                  }
+                  ]
               },
                 {
                     icon: 'el-icon-lx-calendar',
