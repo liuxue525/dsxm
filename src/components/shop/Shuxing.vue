@@ -54,6 +54,58 @@
           @size-change="handleSizeChange">
         </el-pagination>
       </div>
+
+
+
+      <!-- 新增弹出框 -->
+      <el-dialog title="新增信息"  width="40%" :visible.sync="ShuxingFormAdd">
+        <el-form ref="ShuxingForm" :model="ShuxingForm" label-width="120px">
+          <el-form-item label="属性名称" prop="name">
+            <el-input v-model="ShuxingForm.name"></el-input>
+          </el-form-item>
+
+          <el-form-item label="属性中文名称" prop="nameChina">
+            <el-input v-model="ShuxingForm.nameChina"></el-input>
+          </el-form-item>
+
+
+          <el-form-item label="所属类型" prop="typeId">
+                <el-select v-model="ShuxingForm.typeId">
+                    <el-option  v-for="item in typeName" :key="item.id" :label="item.name" :value="item.id"></el-option>
+                </el-select>
+          </el-form-item>
+
+          <el-form-item label="属性类型" prop="type">
+                <el-radio-group v-model="ShuxingForm.type">
+                  <el-radio label="0">下拉框</el-radio>
+                  <el-radio label="1">单选框</el-radio>
+                  <el-radio label="2">复选框</el-radio>
+                  <el-radio label="3">输入框</el-radio>
+                </el-radio-group>
+          </el-form-item>
+
+          <el-form-item label="是否SKU" prop="isSKU">
+            <el-radio-group v-model="ShuxingForm.isSKU">
+              <el-radio label="0">是</el-radio>
+              <el-radio label="1">否</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item label="是否展示" prop="isDel">
+            <el-radio-group v-model="ShuxingForm.isDel">
+              <el-radio label="0">是</el-radio>
+              <el-radio label="1">否</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="ShuxingFormAdd=false">取 消</el-button>
+                <el-button type="primary" @click="addForm">新 增</el-button>
+            </span>
+      </el-dialog>
+
+
     </div>
 </template>
 
@@ -64,6 +116,7 @@
         name: "Shuxing",
         data(){
           return{
+            typeName:[],
             searchForm:{
 
               startDate:"",
@@ -77,6 +130,15 @@
               page: 1
             },
             value1:[],
+            ShuxingForm:{
+              name:"",
+              nameChina:"",
+              typeId:"",
+              type:"",
+              isSKU:"",
+              isDel:""
+            },
+            ShuxingFormAdd:false
           }
         },
         methods:{
@@ -86,7 +148,17 @@
           },
           //新增
           addShuxing:function(){
+            this.ShuxingFormAdd = true;
+            this.selectTypeName();
+          },
+          addForm:function(){
+            axios.post("http://localhost:8080/api/shuxing/add",qs.stringify(this.ShuxingForm)).then(res=>{
+              alert("新增成功")
+              this.ShuxingFormAdd = false;
+              this.queryData();
+            }).then(err=>{
 
+            })
           },
           handlePageChange:function(page){
             this.query.page = page;
@@ -113,7 +185,7 @@
             })
           },
           formatSKU:function (row,column,value,index) {
-            return value==1?"是":"不是";
+            return value==0?"是":"不是";
           },
           formatType:function (row,column,value,index) {
             if(value==0){
@@ -137,6 +209,21 @@
               console.log(Typename);
               return Typename
 
+            }).catch(err=>{
+
+            })
+          },
+          selectTypeName:function () {
+            axios.get("http://localhost:8080/api/shuxing/selectTypeName").then(res=>{
+
+                let array = res.data.data;
+
+              alert(this.ShuxingForm.typeId);
+              for (let i = 0; i <array.length ; i++) {
+
+                this.typeName.push(array[i])
+
+              }
             }).catch(err=>{
 
             })
