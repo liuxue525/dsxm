@@ -106,6 +106,57 @@
       </el-dialog>
 
 
+
+      <!-- 修改弹出框 -->
+      <el-dialog title="新增信息"  width="40%" :visible.sync="ShuxingFormUpdate">
+        <el-form ref="ShuxingUpdateForm" :model="ShuxingUpdateForm" label-width="120px">
+          <el-input v-model="ShuxingUpdateForm.id" type="hidden"></el-input>
+          <el-form-item label="属性名称" prop="name">
+
+            <el-input v-model="ShuxingUpdateForm.name"></el-input>
+          </el-form-item>
+
+          <el-form-item label="属性中文名称" prop="nameChina">
+            <el-input v-model="ShuxingUpdateForm.nameChina"></el-input>
+          </el-form-item>
+
+
+          <el-form-item label="所属类型" prop="typeId">
+            <el-select v-model="ShuxingUpdateForm.typeId">
+              <el-option  v-for="item in typeName" :key="item.id" :label="item.name" :value="item.id"></el-option>
+            </el-select>
+          </el-form-item>
+
+          <el-form-item label="属性类型" prop="type">
+            <el-radio-group v-model="ShuxingUpdateForm.type">
+              <el-radio :label="0">下拉框</el-radio>
+              <el-radio :label="1">单选框</el-radio>
+              <el-radio :label="2">复选框</el-radio>
+              <el-radio :label="3">输入框</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item label="是否SKU" prop="isSKU">
+            <el-radio-group v-model="ShuxingUpdateForm.isSKU">
+              <el-radio :label="0">是</el-radio>
+              <el-radio :label="1">否</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item label="是否展示" prop="isDel">
+            <el-radio-group v-model="ShuxingUpdateForm.isDel">
+              <el-radio :label="0">是</el-radio>
+              <el-radio :label="1">否</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="ShuxingFormUpdate=false">取 消</el-button>
+                <el-button type="primary" @click="updateFormSx">修 改</el-button>
+            </span>
+      </el-dialog>
+
     </div>
 </template>
 
@@ -138,13 +189,40 @@
               isSKU:"",
               isDel:""
             },
-            ShuxingFormAdd:false
+            ShuxingUpdateForm:{
+              id:"",
+              name:"",
+              nameChina:"",
+              typeId:"",
+              type:"",
+              isSKU:"",
+              isDel:""
+            },
+            ShuxingFormAdd:false,
+            ShuxingFormUpdate:false
           }
         },
         methods:{
           //修改
           updateShuxing:function (row) {
-            alert("修改")
+            //alert("修改")
+            this.selectTypeName();
+            this.ShuxingFormUpdate = true;
+            axios.post("http://localhost:8080/api/shuxing/selectShuxingById?id="+row.id).then(res=>{
+              this.ShuxingUpdateForm = res.data.data;
+
+            }).then(err=>{
+
+            })
+          },
+          updateFormSx:function(){
+                axios.post("http://localhost:8080/api/shuxing/update",qs.stringify(this.ShuxingUpdateForm)).then(res=>{
+                  alert("修改成功")
+                  this.ShuxingFormUpdate = false;
+                  this.queryData();
+                }).then(err=>{
+
+                })
           },
           //新增
           addShuxing:function(){
@@ -218,7 +296,7 @@
 
                 let array = res.data.data;
 
-              alert(this.ShuxingForm.typeId);
+
               for (let i = 0; i <array.length ; i++) {
 
                 this.typeName.push(array[i])
