@@ -9,7 +9,7 @@
       >属性新增
       </el-button>
       <el-date-picker
-        v-model="query.value1"
+        v-model="searchForm.value1"
         type="datetimerange"
         start-placeholder="开始日期"
         end-placeholder="结束日期"
@@ -27,9 +27,9 @@
           <el-table-column type="selection" width="55" align="center"></el-table-column>
           <el-table-column prop="id" label="编号" width="55" align="center"></el-table-column>
           <el-table-column prop="nameChina" label="属性名称"></el-table-column>
-          <el-table-column prop="typeId" label="分类"></el-table-column>
-          <el-table-column prop="type" label="属性的类型"></el-table-column>
-          <el-table-column prop="isSKU" label="是否为sku属性" align="center"></el-table-column>
+          <el-table-column prop="typeId" label="分类" :formatter="formatTypeId"></el-table-column>
+          <el-table-column prop="type" label="属性的类型" :formatter="formatType"></el-table-column>
+          <el-table-column prop="isSKU" label="是否为sku属性" align="center" :formatter="formatSKU"></el-table-column>
           <el-table-column prop="isDel" label="是否展示"></el-table-column>
           <el-table-column prop="createDate" label="创建时间"></el-table-column>
           <el-table-column label="操作" width="180" align="center">
@@ -64,14 +64,19 @@
         name: "Shuxing",
         data(){
           return{
+            searchForm:{
+
+              startDate:"",
+              endDate:""
+            },
             pageTotal: 0,
             tableData:[],
             pageSizes: [5, 10, 15, 20],
             query: {  //分页数据
-              value1:"",
               size: 5,
               page: 1
-            }
+            },
+            value1:[],
           }
         },
         methods:{
@@ -95,10 +100,44 @@
 
           //数据查询
           queryData:function () {
-            axios.get("http://localhost:8080/api/shuxing/getData?page="+this.query.page+"&size="+this.query.size).then(res=>{
+            if(this.value1.length!=null){
+              this.searchForm.startDate = this.value1[0];
+              this.searchForm.endDate = this.value1[1];
+            }
+            var searchStr=qs.stringify(this.searchForm);
+            axios.get("http://localhost:8080/api/shuxing/getData?page="+this.query.page+"&size="+this.query.size+"&"+searchStr).then(res=>{
               this.tableData = res.data.data.list;
               this.pageTotal = res.data.data.count;
             }).then(err=>{
+
+            })
+          },
+          formatSKU:function (row,column,value,index) {
+            return value==1?"是":"不是";
+          },
+          formatType:function (row,column,value,index) {
+            if(value==0){
+              return "下拉框"
+            }
+            if(value==1){
+              return " 单选框"
+            }
+            if(value==2){
+              return "复选框"
+            }
+            if(value==3){
+              return "输入框"
+            }
+          },
+          formatTypeId:function (row,column,value,index) {
+            let Typename = "";
+            axios.get("http://localhost:8080/api/shuxing/selectTypeNameById?typeId="+value).then(res=>{
+
+              Typename +=  res.data.data;
+              console.log(Typename);
+              return Typename
+
+            }).catch(err=>{
 
             })
           }
