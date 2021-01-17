@@ -26,12 +26,11 @@
         >
           <el-table-column type="selection" width="55" align="center"></el-table-column>
           <el-table-column prop="id" label="编号" width="55" align="center"></el-table-column>
-          <el-table-column prop="nameChina" label="属性名称"></el-table-column>
-          <el-table-column prop="typeId" label="分类" :formatter="formatTypeId"></el-table-column>
+          <el-table-column prop="name" label="属性名称"></el-table-column>
+          <el-table-column prop="typeNames" label="分类" ></el-table-column>
           <el-table-column prop="type" label="属性的类型" :formatter="formatType"></el-table-column>
           <el-table-column prop="isSKU" label="是否为sku属性" align="center" :formatter="formatSKU"></el-table-column>
-          <el-table-column prop="isDel" label="是否展示"></el-table-column>
-          <el-table-column prop="createDate" label="创建时间"></el-table-column>
+
           <el-table-column label="操作" width="180" align="center">
             <template slot-scope="scope">
               <el-button
@@ -199,7 +198,10 @@
               isDel:""
             },
             ShuxingFormAdd:false,
-            ShuxingFormUpdate:false
+            ShuxingFormUpdate:false,
+            array:[],
+            str:""
+
           }
         },
         methods:{
@@ -256,6 +258,7 @@
             }
             var searchStr=qs.stringify(this.searchForm);
             axios.get("http://localhost:8080/api/shuxing/getData?page="+this.query.page+"&size="+this.query.size+"&"+searchStr).then(res=>{
+              debugger;
               this.tableData = res.data.data.list;
               this.pageTotal = res.data.data.count;
             }).then(err=>{
@@ -279,34 +282,53 @@
               return "输入框"
             }
           },
-          formatTypeId:function (row,column,value,index) {
-            let Typename = "";
-            axios.get("http://localhost:8080/api/shuxing/selectTypeNameById?typeId="+value).then(res=>{
 
-              Typename +=  res.data.data;
-              console.log(Typename);
-              return Typename
-
-            }).catch(err=>{
-
-            })
-          },
           selectTypeName:function () {
             axios.get("http://localhost:8080/api/shuxing/selectTypeName").then(res=>{
+                this.array = res.data.data;
 
-                let array = res.data.data;
 
+              for (let i = 0; i <this.array.length ; i++) {
 
-              for (let i = 0; i <array.length ; i++) {
+                this.typeName.push(this.str)
 
-                this.typeName.push(array[i])
+                debugger;
+                if(this.array[i].pid==0){
 
+                  this.digui(this.array[i])
+                }
               }
             }).catch(err=>{
 
             })
+          },
+          digui:function (node) {
+            let rs=this.isParent(node);
+            if(rs==true){
+              this.str+="name:"+node.name+"/";
+              debugger;
+              //console.log(this.str)
+              for (let i = 0; i <this.array.length ; i++) {
+                if(node.id==this.array[i].pid){
+                  this.digui(this.array[i]);
+                  this.str+=node.name+"/";
+                  console.log(this.str)
+                }
+              }
+            }else {
+              this.str+=node.name+"id:"+node.id;
+            }
+          },
+          isParent:function(node){
+            for (let i = 0; i <this.array.length ; i++) {
+              if(node.id==this.array[i].pid){
+                debugger;
+                return true;
+              }
+            }
+            return false;
           }
-        },
+            },
         created:function () {
           this.queryData();
         }

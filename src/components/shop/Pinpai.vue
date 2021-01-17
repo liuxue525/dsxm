@@ -33,7 +33,7 @@
           <el-table-column prop="ord" label="排序"></el-table-column>
           <el-table-column label="品牌logo" align="center">
             <template slot-scope="scope">
-              <img width="50px" :src="'http://localhost:8080/'+scope.row.imgPath"/>
+              <img width="50px" :src="scope.row.imgPath"/>
             </template>
           </el-table-column>
 
@@ -79,15 +79,18 @@
           </el-form-item>
 
           <el-form-item label="品牌LOGO" prop="imgPath">
+
+
             <el-upload
-              class="upload-demo"
+              class="avatar-uploader"
               action="http://localhost:8080/api/pinpai/upload"
-              :on-success="imgCallBack"
-              name="file"
-              list-type="picture">
-              <el-button size="small" type="primary">点击上传</el-button>
-              <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess"
+              :before-upload="beforeAvatarUpload">
+              <img v-if="imageUrl" :src="imageUrl" class="avatar">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
             </el-upload>
+
           </el-form-item>
 
           <el-form-item label="品牌故事" prop="bandDesc">
@@ -128,20 +131,40 @@
             <el-input v-model="formUpdate.bandE"></el-input>
           </el-form-item>
 
-          <el-form-item label="品牌LOGO" prop="imgPath">
+          <!--<el-form-item label="品牌LOGO" prop="imgPath">
+            <template slot-scope="scope">
+              <img width="50px" :src="formUpdate.imgPath"/>
+            </template>
+
             <el-upload
-              class="upload-demo"
+              class="avatar-uploader"
               action="http://localhost:8080/api/pinpai/upload"
-              :on-success="imgCallBack"
-              name="file"
-              list-type="picture">
-              <template slot-scope="scope">
-                <img width="50px" :src="'http://localhost:8080/'+scope.row.imgPath"/>
-              </template>
-              <el-button size="small" type="primary">点击上传</el-button>
-              <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess"
+              :before-upload="beforeAvatarUpload">
+              <img v-if="imageUrl" :src="imageUrl" class="avatar">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
             </el-upload>
+
+          </el-form-item>-->
+
+
+          <el-form-item label="品牌LOGO" prop="imgPath">
+            <img width="50px" :src="formUpdate.imgPath"/>
+
+            <el-upload
+              class="avatar-uploader"
+              action="http://localhost:8080/api/pinpai/upload"
+              :show-file-list="false"
+              :on-success="handleAvatarSuccess1"
+              :before-upload="beforeAvatarUpload1">
+              <img v-if="imageUrl" :src="imageUrl" class="avatar">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
+
           </el-form-item>
+
+
 
           <el-form-item label="品牌故事" prop="bandDesc">
             <el-input
@@ -188,7 +211,7 @@
           size: 5,
           page: 1
         },
-
+        imageUrl:"",
         tableData: [],
         pageSizes: [5, 10, 15, 20],
         dialogBrandAdd: false,
@@ -219,6 +242,14 @@
       //新增方法
       addBrand:function(){
           this.dialogBrandAdd = true;
+          this.brandForm={
+            name: "",
+            bandE: "",
+            ord: "",
+            imgPath: "",
+            bandDesc: ""
+                   }
+        this.imageUrl="";
 
       },
       //条件查询
@@ -228,6 +259,7 @@
       //修改
       handleEdit:function(row){
         this.dialogBrandUpdate = true;
+        this.imageUrl="";
         axios.get("http://localhost:8080/api/pinpai/selectPinpaiById?id="+row.id).then(res=>{
           this.formUpdate = res.data.data;
           this.formUpdate.id = row.id;
@@ -284,7 +316,47 @@
         }).then(err=>{
 
         })
-      }
+      },
+      handleAvatarSuccess(res, file) {
+        debugger;
+        //打断点 看怎么取返回值
+        this.brandForm.imgPath=res.data;
+        //显示赋值
+        this.imageUrl=res.data;
+      },
+      beforeAvatarUpload(file) {
+        //限制类型    name  来限制
+        const isJPG = file.type === 'image/jpeg';
+        const isLt2M = file.size / 1024 / 1024 < 4;
+
+        if (!isJPG) {
+          this.$message.error('上传头像图片只能是 JPG 格式!');
+        }
+        if (!isLt2M) {
+          this.$message.error('上传头像图片大小不能超过 2MB!');
+        }
+        return isJPG && isLt2M;
+      },
+      handleAvatarSuccess1(res, file) {
+        debugger;
+        //打断点 看怎么取返回值
+        this.formUpdate.imgPath=res.data;
+        //显示赋值
+        this.imageUrl=res.data;
+      },
+      beforeAvatarUpload1(file) {
+        //限制类型    name  来限制
+        const isJPG = file.type === 'image/jpeg';
+        const isLt2M = file.size / 1024 / 1024 < 4;
+
+        if (!isJPG) {
+          this.$message.error('上传头像图片只能是 JPG 格式!');
+        }
+        if (!isLt2M) {
+          this.$message.error('上传头像图片大小不能超过 2MB!');
+        }
+        return isJPG && isLt2M;
+      },
 
     },
     created:function () {
@@ -325,5 +397,28 @@
     margin: auto;
     width: 40px;
     height: 40px;
+  }
+  .avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 178px;
+    height: 178px;
+    line-height: 178px;
+    text-align: center;
+  }
+  .avatar {
+    width: 178px;
+    height: 178px;
+    display: block;
   }
 </style>
