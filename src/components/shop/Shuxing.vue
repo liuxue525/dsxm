@@ -180,7 +180,7 @@
               <el-button
                 type="text"
                 icon="el-icon-edit"
-                @click="toupdateShuxingValue"
+                @click="toUpdateShuxingValueForm(scope.row)"
               >编辑
               </el-button>
 
@@ -193,6 +193,7 @@
       <!--新增属性值-->
       <el-dialog title="新增信息"  width="40%" :visible.sync="ShuxingValueFormAdd">
         <el-form ref="ShuxingValueForm" :model="ShuxingValueForm" label-width="120px">
+          <el-input type="hidden" v-model="ShuxingValueForm.id"></el-input>
           <el-form-item label="属性值名称" prop="name">
             <el-input v-model="ShuxingValueForm.name"></el-input>
           </el-form-item>
@@ -218,19 +219,19 @@
 
 
       <!--修改属性值-->
-      <el-dialog title="新增信息"  width="40%" :visible.sync="ShuxingValueFormAdd">
-        <el-form ref="ShuxingValueForm" :model="ShuxingValueForm" label-width="120px">
+      <el-dialog title="新增信息"  width="40%" :visible.sync="ShuxingValueFormUpdateShow">
+        <el-form ref="ShuxingValueFormUpdate" :model="ShuxingValueFormUpdate" label-width="120px">
           <el-form-item label="属性值名称" prop="name">
-            <el-input v-model="ShuxingValueForm.name"></el-input>
+            <el-input v-model="ShuxingValueFormUpdate.name"></el-input>
           </el-form-item>
 
           <el-form-item label="属性值中文名称" prop="nameCH">
-            <el-input v-model="ShuxingValueForm.nameCH"></el-input>
+            <el-input v-model="ShuxingValueFormUpdate.nameCH"></el-input>
           </el-form-item>
 
 
           <el-form-item label="属性" prop="attId">
-            <el-select v-model="ShuxingValueForm.attId">
+            <el-select v-model="ShuxingValueFormUpdate.attId">
               <el-option v-for="item in shuxingIds" :key="item.id" :label="item.name" :value="item.id"></el-option>
             </el-select>
           </el-form-item>
@@ -238,8 +239,8 @@
 
         </el-form>
         <span slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="ShuxingValueFormAdd=false">取 消</el-button>
-                <el-button type="primary" @click="addValueForm">新 增</el-button>
+                <el-button type="primary" @click="ShuxingValueFormUpdateShow=false">取 消</el-button>
+                <el-button type="primary" @click="updateValueForm">修 改</el-button>
             </span>
       </el-dialog>
 
@@ -294,12 +295,20 @@
 
             //新增
             ShuxingValueFormAdd:false,
+            ShuxingValueFormUpdateShow:false,
             ShuxingValueForm:{
               name:"",
               nameCH:"",
               attId:""
             },
-            shuxingIds:[]
+            shuxingIds:[],
+
+            ShuxingValueFormUpdate:{
+              id:"",
+              name:"",
+              nameCH:"",
+              attId:""
+            }
 
           }
         },
@@ -454,7 +463,25 @@
               this.ShuxingValueFormAdd = true;
 
           },
-          toupdateShuxingValue:function () {
+          //修改
+          toUpdateShuxingValueForm:function (row) {
+            this.ShuxingValueFormUpdateShow = true;
+            axios.get("http://localhost:8080/api/sxvalue/selectValueById?id="+row.id).then(res=>{
+              console.log(res)
+              this.ShuxingValueFormUpdate = res.data.data;
+            }).then(err=>{
+            })
+
+          },
+          updateValueForm:function(){
+              axios.post("http://localhost:8080/api/sxvalue/update",qs.stringify(this.ShuxingValueFormUpdate)).then(res=>{
+                  alert("修改成功")
+                this.ShuxingValueFormUpdateShow = false;
+                this.queryShuxingData(this.ShuxingValueFormUpdate.attId);
+
+              }).catch(err=>{
+
+              })
 
           },
           addValueForm:function () {
