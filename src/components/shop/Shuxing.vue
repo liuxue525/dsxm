@@ -39,6 +39,12 @@
                 @click="updateShuxing( scope.row)"
               >编辑
               </el-button>
+              <el-button
+                type="text"
+                icon="el-icon-edit"
+                @click="updateShuxingValue( scope.row)"
+              >维护属性值
+              </el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -105,9 +111,8 @@
       </el-dialog>
 
 
-
       <!-- 修改弹出框 -->
-      <el-dialog title="新增信息"  width="40%" :visible.sync="ShuxingFormUpdate">
+      <el-dialog title="修改信息"  width="40%" :visible.sync="ShuxingFormUpdate">
         <el-form ref="ShuxingUpdateForm" :model="ShuxingUpdateForm" label-width="120px">
           <el-input v-model="ShuxingUpdateForm.id" type="hidden"></el-input>
           <el-form-item label="属性名称" prop="name">
@@ -156,6 +161,39 @@
             </span>
       </el-dialog>
 
+      <!-- 属性值表-->
+      <el-dialog title="属性值信息" :visible.sync="ShowValueTable">
+        <el-button
+          type="primary"
+          icon="el-icon-circle-plus"
+          class="handle-del mr10"
+          @click="addShuxingValue"
+        >属性值新增
+        </el-button>
+        <el-table :data="ShuxingValueTable">
+          <el-table-column property="id" label="序号" width="150"></el-table-column>
+          <el-table-column property="name" label="属性值" width="200"></el-table-column>
+          <el-table-column property="nameCH" label="属性中文值"></el-table-column>
+          <el-table-column property="attId" label="属性ID"></el-table-column>
+          <el-table-column label="操作" width="180" align="center">
+            <template slot-scope="scope">
+              <el-button
+                type="text"
+                icon="el-icon-edit"
+
+              >编辑
+              </el-button>
+              <el-button
+                type="text"
+                icon="el-icon-edit"
+
+              >维护属性值
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-dialog>
+
     </div>
 </template>
 
@@ -200,8 +238,10 @@
             ShuxingFormAdd:false,
             ShuxingFormUpdate:false,
             array:[],
-            str:""
-
+            str:"",
+           /* 属性值表数据*/
+            ShowValueTable:false,
+            ShuxingValueTable:[]
           }
         },
         methods:{
@@ -322,11 +362,34 @@
           isParent:function(node){
             for (let i = 0; i <this.array.length ; i++) {
               if(node.id==this.array[i].pid){
-                debugger;
+
                 return true;
               }
             }
             return false;
+          },
+          //查询属性值表的数据
+          queryShuxingData:function(id){
+              axios.get("http://localhost:8080/api/sxvalue/getData?attId="+id).then(res=>{
+
+                  console.log(res);
+                  this.ShuxingValueTable = res.data.data;
+              }).then(err=>{
+
+              })
+          },
+
+
+
+          /*属性值表维护*/
+          updateShuxingValue:function (row) {
+
+            this.ShowValueTable = true;
+            this.queryShuxingData(row.id);
+          },
+          //属性值表新增
+          addShuxingValue:function () {
+
           }
             },
         created:function () {
