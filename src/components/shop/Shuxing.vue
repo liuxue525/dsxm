@@ -180,18 +180,67 @@
               <el-button
                 type="text"
                 icon="el-icon-edit"
-
+                @click="toupdateShuxingValue"
               >编辑
               </el-button>
-              <el-button
-                type="text"
-                icon="el-icon-edit"
 
-              >维护属性值
-              </el-button>
             </template>
           </el-table-column>
         </el-table>
+      </el-dialog>
+
+
+      <!--新增属性值-->
+      <el-dialog title="新增信息"  width="40%" :visible.sync="ShuxingValueFormAdd">
+        <el-form ref="ShuxingValueForm" :model="ShuxingValueForm" label-width="120px">
+          <el-form-item label="属性值名称" prop="name">
+            <el-input v-model="ShuxingValueForm.name"></el-input>
+          </el-form-item>
+
+          <el-form-item label="属性值中文名称" prop="nameCH">
+            <el-input v-model="ShuxingValueForm.nameCH"></el-input>
+          </el-form-item>
+
+
+          <el-form-item label="属性" prop="attId">
+            <el-select v-model="ShuxingValueForm.attId">
+                <el-option v-for="item in shuxingIds" :key="item.id" :label="item.name" :value="item.id"></el-option>
+            </el-select>
+          </el-form-item>
+
+
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="ShuxingValueFormAdd=false">取 消</el-button>
+                <el-button type="primary" @click="addValueForm">新 增</el-button>
+            </span>
+      </el-dialog>
+
+
+      <!--修改属性值-->
+      <el-dialog title="新增信息"  width="40%" :visible.sync="ShuxingValueFormAdd">
+        <el-form ref="ShuxingValueForm" :model="ShuxingValueForm" label-width="120px">
+          <el-form-item label="属性值名称" prop="name">
+            <el-input v-model="ShuxingValueForm.name"></el-input>
+          </el-form-item>
+
+          <el-form-item label="属性值中文名称" prop="nameCH">
+            <el-input v-model="ShuxingValueForm.nameCH"></el-input>
+          </el-form-item>
+
+
+          <el-form-item label="属性" prop="attId">
+            <el-select v-model="ShuxingValueForm.attId">
+              <el-option v-for="item in shuxingIds" :key="item.id" :label="item.name" :value="item.id"></el-option>
+            </el-select>
+          </el-form-item>
+
+
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="ShuxingValueFormAdd=false">取 消</el-button>
+                <el-button type="primary" @click="addValueForm">新 增</el-button>
+            </span>
       </el-dialog>
 
     </div>
@@ -241,7 +290,17 @@
             str:"",
            /* 属性值表数据*/
             ShowValueTable:false,
-            ShuxingValueTable:[]
+            ShuxingValueTable:[],
+
+            //新增
+            ShuxingValueFormAdd:false,
+            ShuxingValueForm:{
+              name:"",
+              nameCH:"",
+              attId:""
+            },
+            shuxingIds:[]
+
           }
         },
         methods:{
@@ -299,6 +358,8 @@
             var searchStr=qs.stringify(this.searchForm);
             axios.get("http://localhost:8080/api/shuxing/getData?page="+this.query.page+"&size="+this.query.size+"&"+searchStr).then(res=>{
               debugger;
+
+              this.shuxingIds = res.data.data.list;
               this.tableData = res.data.data.list;
               this.pageTotal = res.data.data.count;
             }).then(err=>{
@@ -381,6 +442,7 @@
 
 
 
+
           /*属性值表维护*/
           updateShuxingValue:function (row) {
 
@@ -389,7 +451,20 @@
           },
           //属性值表新增
           addShuxingValue:function () {
+              this.ShuxingValueFormAdd = true;
 
+          },
+          toupdateShuxingValue:function () {
+
+          },
+          addValueForm:function () {
+              axios.post("http://localhost:8080/api/sxvalue/add",qs.stringify(this.ShuxingValueForm)).then(res=>{
+                alert("新增成功")
+                this.ShuxingValueFormAdd = false;
+                this.queryShuxingData(this.ShuxingValueForm.attId);
+              }).then(err=>{
+
+              })
           }
             },
         created:function () {
