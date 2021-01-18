@@ -34,6 +34,10 @@ export default new Router({
           path: '/Shuxing',
           component: () => import(/* webpackChunkName: "dashboard" */ '../components/shop/Shuxing.vue'),
           meta: { title: '属性管理' }
+        },{
+          path: '/addSp',
+          component: () => import(/* webpackChunkName: "dashboard" */ '../components/shop/AddShangPin.vue'),
+          meta: { title: '添加商品' }
         }
 
       ]

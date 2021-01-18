@@ -77,6 +77,10 @@ export default {
                   {
                     index: 'Shuxing',
                     title: '属性管理'
+                  },
+                  {
+                    index: 'addSp',
+                    title: '商品新增'
                   }
                   ]
               },
