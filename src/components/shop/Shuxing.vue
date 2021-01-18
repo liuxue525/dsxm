@@ -9,7 +9,7 @@
       >属性新增
       </el-button>
       <el-date-picker
-        v-model="searchForm.value1"
+        v-model="value1"
         type="datetimerange"
         start-placeholder="开始日期"
         end-placeholder="结束日期"
@@ -28,18 +28,20 @@
           <el-table-column prop="id" label="编号" width="55" align="center"></el-table-column>
           <el-table-column prop="name" label="属性名称"></el-table-column>
           <el-table-column prop="typeNames" label="分类" ></el-table-column>
-          <el-table-column prop="type" label="属性的类型" :formatter="formatType"></el-table-column>
+          <el-table-column prop="type" label="属性的类型" :formatter="formatType" ></el-table-column>
           <el-table-column prop="isSKU" label="是否为sku属性" align="center" :formatter="formatSKU"></el-table-column>
 
           <el-table-column label="操作" width="180" align="center">
             <template slot-scope="scope">
               <el-button
+
                 type="text"
                 icon="el-icon-edit"
                 @click="updateShuxing( scope.row)"
               >编辑
               </el-button>
               <el-button
+                v-if="scope.row.type!=3"
                 type="text"
                 icon="el-icon-edit"
                 @click="updateShuxingValue( scope.row)"
@@ -162,7 +164,7 @@
       </el-dialog>
 
       <!-- 属性值表-->
-      <el-dialog title="属性值信息" :visible.sync="ShowValueTable">
+      <el-dialog :title="valueTitle"  :visible.sync="ShowValueTable">
         <el-button
           type="primary"
           icon="el-icon-circle-plus"
@@ -174,7 +176,7 @@
           <el-table-column property="id" label="序号" width="150"></el-table-column>
           <el-table-column property="name" label="属性值" width="200"></el-table-column>
           <el-table-column property="nameCH" label="属性中文值"></el-table-column>
-          <el-table-column property="attId" label="属性ID"></el-table-column>
+
           <el-table-column label="操作" width="180" align="center">
             <template slot-scope="scope">
               <el-button
@@ -192,7 +194,7 @@
 
       <!--新增属性值-->
       <el-dialog title="新增信息"  width="40%" :visible.sync="ShuxingValueFormAdd">
-        <el-form ref="ShuxingValueForm" :model="ShuxingValueForm" label-width="120px">
+        <el-form ref="ShuxingValueForm" :rules="valuerules" :model="ShuxingValueForm" label-width="120px">
           <el-input type="hidden" v-model="ShuxingValueForm.id"></el-input>
           <el-form-item label="属性值名称" prop="name">
             <el-input v-model="ShuxingValueForm.name"></el-input>
@@ -203,11 +205,11 @@
           </el-form-item>
 
 
-          <el-form-item label="属性" prop="attId">
+          <!--<el-form-item label="属性" prop="attId">
             <el-select v-model="ShuxingValueForm.attId">
-                <el-option v-for="item in shuxingIds" :key="item.id" :label="item.name" :value="item.id"></el-option>
+              <el-option v-for="item in shuxingIds" :key="item.id" :label="item.name" :value="item.id"></el-option>
             </el-select>
-          </el-form-item>
+          </el-form-item>-->
 
 
         </el-form>
@@ -253,8 +255,21 @@
     export default {
         name: "Shuxing",
         data(){
+
+          var checkname = (rule, value, callback) => {
+            if (!value) {
+              return callback(new Error('属性名不能为空'));
+            }
+            if(/^[\u4e00-\u9fa5]+$/i.test(value)){
+              callback();
+            }else{
+              callback(new Error('只能输入中文'));
+            }
+          };
+
           return{
             typeName:[],
+            typeNames:"",
             searchForm:{
 
               startDate:"",
@@ -308,7 +323,17 @@
               name:"",
               nameCH:"",
               attId:""
-            }
+            },
+            valueTitle:"",
+            valuerules:{
+              nameCH: [
+                { required: true, message: '请输入属性值的名称', trigger: 'blur' },
+                { max: 10, message: '长度不能超过 10 个字符', trigger: 'blur' },
+                { validator:checkname,trigger: 'blur' }
+              ],
+              name: [
+                { required: true, message: '请输入属性值', trigger: 'change' }
+              ]},
 
           }
         },
@@ -363,10 +388,12 @@
             if(this.value1.length!=null){
               this.searchForm.startDate = this.value1[0];
               this.searchForm.endDate = this.value1[1];
+
             }
             var searchStr=qs.stringify(this.searchForm);
-            axios.get("http://localhost:8080/api/shuxing/getData?page="+this.query.page+"&size="+this.query.size+"&"+searchStr).then(res=>{
-              debugger;
+            console.log(searchStr);
+            axios.get("http://localhost:8080/api/shuxing/getData?page="+this.query.page+"&size="+this.query.size).then(res=>{
+
 
               this.shuxingIds = res.data.data.list;
               this.tableData = res.data.data.list;
@@ -392,51 +419,62 @@
               return "输入框"
             }
           },
+          //typeName要展示的数据
+          //array 查询出来所有的数据
 
           selectTypeName:function () {
             axios.get("http://localhost:8080/api/shuxing/selectTypeName").then(res=>{
                 this.array = res.data.data;
 
+                this.getChildrenType();
+              //循环所有的子节点信息
+              for (let i = 0; i <this.typeName.length ; i++) {
+                    this.typeNames="";
+                    this.chandleName(this.typeName[i]);
 
-              for (let i = 0; i <this.array.length ; i++) {
-
-                this.typeName.push(this.str)
-
-                debugger;
-                if(this.array[i].pid==0){
-
-                  this.digui(this.array[i])
-                }
+                this.typeName[i].name = this.typeNames.split("/").reverse().join("/").substr(0,this.typeNames.split("/").reverse().join("/").length-1)
               }
+
             }).catch(err=>{
 
             })
           },
-          digui:function (node) {
-            let rs=this.isParent(node);
-            if(rs==true){
-              this.str+="name:"+node.name+"/";
-              debugger;
-              //console.log(this.str)
-              for (let i = 0; i <this.array.length ; i++) {
-                if(node.id==this.array[i].pid){
-                  this.digui(this.array[i]);
-                  this.str+=node.name+"/";
-                  console.log(this.str)
+          chandleName:function(node){
+            debugger;
+              if(node.pid!=0){
+                //pid！=0说明不是顶层节点 拼接字符串
+                this.typeNames+="/"+node.name
+                //循环所有的数据
+                for (let i = 0; i <this.array.length ; i++) {
+                    if (node.pid==this.array[i].id){ //说明是父节点 继续拼接
+                      this.chandleName(this.array[i]);
+                      break;
+
+                    }
                 }
+
+              }else {
+                this.typeNames+="/"+node.name;
               }
-            }else {
-              this.str+=node.name+"id:"+node.id;
+          },
+          getChildrenType:function(){
+            for (let i = 0; i <this.array.length ; i++) {
+                let node = this.array[i];
+              this.isChildrenNode(node);
             }
           },
-          isParent:function(node){
+          //判断是不是子节点
+          isChildrenNode:function(node){
+            let rs = true;
             for (let i = 0; i <this.array.length ; i++) {
               if(node.id==this.array[i].pid){
-
-                return true;
+                  rs  = false;
+                  break;
               }
             }
-            return false;
+            if(rs==true){
+              this.typeName.push(node)
+            }
           },
           //查询属性值表的数据
           queryShuxingData:function(id){
@@ -456,6 +494,8 @@
           updateShuxingValue:function (row) {
 
             this.ShowValueTable = true;
+            this.valueTitle=row.name+"的选项信息";
+            this.ShuxingValueForm.attId=row.id;
             this.queryShuxingData(row.id);
           },
           //属性值表新增
@@ -463,6 +503,26 @@
               this.ShuxingValueFormAdd = true;
 
           },
+      addValueForm:function () {
+            this.$refs["ShuxingValueForm"].validate(res=>{
+              if(res==true){
+                axios.post("http://localhost:8080/api/sxvalue/add",qs.stringify(this.ShuxingValueForm)).then(res=>{
+                  //弹框
+                  this.$message({
+                    message: '添加成功',
+                    type: 'success'
+                  });
+                  this.ShuxingValueFormAdd = false;
+                  this.queryShuxingData(this.ShuxingValueForm.attId);
+                }).then(err=>{
+
+                })
+              }else {
+                return false;
+              }
+            })
+
+      },
           //修改
           toUpdateShuxingValueForm:function (row) {
             this.ShuxingValueFormUpdateShow = true;
@@ -480,16 +540,6 @@
                 this.queryShuxingData(this.ShuxingValueFormUpdate.attId);
 
               }).catch(err=>{
-
-              })
-
-          },
-          addValueForm:function () {
-              axios.post("http://localhost:8080/api/sxvalue/add",qs.stringify(this.ShuxingValueForm)).then(res=>{
-                alert("新增成功")
-                this.ShuxingValueFormAdd = false;
-                this.queryShuxingData(this.ShuxingValueForm.attId);
-              }).then(err=>{
 
               })
           }
