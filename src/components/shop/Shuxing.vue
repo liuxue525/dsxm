@@ -256,16 +256,7 @@
         name: "Shuxing",
         data(){
 
-          var checkname = (rule, value, callback) => {
-            if (!value) {
-              return callback(new Error('属性名不能为空'));
-            }
-            if(/^[\u4e00-\u9fa5]+$/i.test(value)){
-              callback();
-            }else{
-              callback(new Error('只能输入中文'));
-            }
-          };
+
 
           return{
             typeName:[],
@@ -328,8 +319,8 @@
             valuerules:{
               nameCH: [
                 { required: true, message: '请输入属性值的名称', trigger: 'blur' },
-                { max: 10, message: '长度不能超过 10 个字符', trigger: 'blur' },
-                { validator:checkname,trigger: 'blur' }
+                { max: 10, message: '长度不能超过 10 个字符', trigger: 'blur' }
+
               ],
               name: [
                 { required: true, message: '请输入属性值', trigger: 'change' }
@@ -341,6 +332,7 @@
           //修改
           updateShuxing:function (row) {
             //alert("修改")
+            this.typeName = [];
             this.selectTypeName();
             this.ShuxingFormUpdate = true;
             axios.post("http://localhost:8080/api/shuxing/selectShuxingById?id="+row.id).then(res=>{
@@ -362,6 +354,7 @@
           //新增
           addShuxing:function(){
             this.ShuxingFormAdd = true;
+            this.typeName = [];
             this.selectTypeName();
           },
           addForm:function(){
@@ -433,6 +426,7 @@
                     this.chandleName(this.typeName[i]);
 
                 this.typeName[i].name = this.typeNames.split("/").reverse().join("/").substr(0,this.typeNames.split("/").reverse().join("/").length-1)
+                console.log(this.typeName)
               }
 
             }).catch(err=>{
@@ -440,39 +434,36 @@
             })
           },
           chandleName:function(node){
-            debugger;
-              if(node.pid!=0){
-                //pid！=0说明不是顶层节点 拼接字符串
-                this.typeNames+="/"+node.name
-                //循环所有的数据
-                for (let i = 0; i <this.array.length ; i++) {
-                    if (node.pid==this.array[i].id){ //说明是父节点 继续拼接
-                      this.chandleName(this.array[i]);
-                      break;
 
-                    }
+            if(node.pid!=0){
+              this.typeNames += "/"+node.name;
+              for (let i = 0; i <this.array.length ; i++) {
+                if(node.pid == this.array[i].id){
+                  this.chandleName(this.array[i]);
+                  break;
                 }
-
-              }else {
-                this.typeNames+="/"+node.name;
               }
+            }else {
+              this.typeNames+="/"+node.name;
+            }
           },
-          getChildrenType:function(){
-            for (let i = 0; i <this.array.length ; i++) {
-                let node = this.array[i];
+          getChildrenType: function () {
+
+            for (let i = 0; i < this.array.length; i++) {
+              let node = this.array[i];
               this.isChildrenNode(node);
             }
           },
           //判断是不是子节点
-          isChildrenNode:function(node){
+          isChildrenNode: function (node) {
             let rs = true;
-            for (let i = 0; i <this.array.length ; i++) {
-              if(node.id==this.array[i].pid){
-                  rs  = false;
-                  break;
+            for (let i = 0; i < this.array.length; i++) {
+              if (node.id == this.array[i].pid) {
+                rs = false;
+                break;
               }
             }
-            if(rs==true){
+            if (rs == true) {
               this.typeName.push(node)
             }
           },
