@@ -5,7 +5,7 @@
       <el-steps :active="active" finish-status="success">
         <el-step title="填写商品信息"></el-step>
         <el-step title="填写商品属性"></el-step>
-        <el-step title="步骤 3"></el-step>
+        <!--<el-step title="步骤 3"></el-step>-->
       </el-steps>
 
 
@@ -115,20 +115,33 @@
             </el-checkbox-group>
 
 
-            <el-radio-group v-if="a.type==1">
-              <el-radio v-for="b in a.value" :key="b.id" :label="b.nameCH" ></el-radio>
-            </el-radio-group>
-
           </el-form-item>
 
         </el-form-item>
 
-        <table v-if="tableShow">
-          <tr>
-            <td>价格</td>
-            <td>库存</td>
-          </tr>
-        </table>
+        <el-table v-if="tableShow" :data="tableSkuData" style="width: 100%">
+
+          <el-table-column  v-for="c in cols" :key="c.id" :label="c.nameChina" :prop="c.name">
+
+          </el-table-column>
+
+          <el-table-column
+            label="库存"
+            width="180">
+
+            <template slot-scope="scope">
+              <el-input v-model="scope.row.kuCun"/>
+            </template>
+
+          </el-table-column>
+          <el-table-column
+            label="价格"
+            width="180">
+            <template slot-scope="scope">
+              <el-input v-model="scope.row.price"/>    <!--绑定当前行的数据-->
+            </template>
+          </el-table-column>
+        </el-table>
 
 
 
@@ -136,25 +149,32 @@
         <el-form-item v-if="SPUData.length>0" label="商品参数" prop="name">
           <el-form-item v-for="a in SPUData" :key="a.id" :label="a.nameChina" >
 
-            <el-input v-if="a.type==3"></el-input>
+            <el-input v-if="a.type==3" v-model="a.checkStatus"></el-input>
 
-            <el-select v-if="a.type==0" v-model="aa[a.id]">
+            <el-select v-if="a.type==0" v-model="a.checkStatus">
               <el-option v-for="b in a.value" :key="b.id" :label="b.nameCH" :value="b.id"></el-option>
             </el-select>
 
-            <el-checkbox-group v-model="ss" v-if="a.type==2">
+            <el-checkbox-group v-if="a.type==2"  v-model="a.checkStatus">
               <el-checkbox v-for="b in a.value" :key="b.id" :label="b.nameCH" :value="b.id"></el-checkbox>
             </el-checkbox-group>
 
 
-            <el-radio-group v-if="a.type==1">
+            <el-radio-group v-if="a.type==1" v-model="a.checkStatus">
               <el-radio v-for="b in a.value" :key="b.id" :label="b.nameCH" ></el-radio>
             </el-radio-group>
 
           </el-form-item>
         </el-form-item>
+        <el-button  type="success" disabled  style="margin-top: 12px;margin-left: 450px" @click="next">下一步</el-button>
+        <el-button type="warning" @click="testSubmit">提交</el-button>
+
+
+
+
 
       </el-form>
+
 
     </div>
 </template>
@@ -198,10 +218,6 @@
               ],
               bandId: [
                 { required: true, message: '请输入属性值的名称', trigger: 'blur' }
-              ],
-              price: [
-                { required: true, message: '请输入价格', trigger: 'blur' },
-                /*{ validator:checkPrice,trigger: 'blur' }*/
               ]
             },
             active: 0,
@@ -213,21 +229,66 @@
             ShuxingData:[],  //展示的下拉框
             ShuxingStr:"",
             ShuxingForm:{
-              attId:""
+
+              attId:"",
+
+
             },
             SKUData:[],  //影响价格
             SPUData:[],    //不影响价格
-            tableShow:false
+            tableShow:false,
+            tableSkuData:[],
+            cols:[],
+
           }
         },
       methods: {
+        testSubmit:function(){
+            //console.log(this.form)   //第一页的数据
+            //SPU数据
+            console.log(this.SPUData);
+
+            let SPUDataForm = [];
+          for (let i = 0; i <this.SPUData.length ; i++) {
+            let SPUData = {}
+            SPUData[this.SPUData[i].name] = this.SPUData[i].checkStatus;
+                SPUDataForm.push(SPUData);
+                debugger;
+          }
+            //sku数据
+            console.log(this.tableSkuData);
+          debugger;
+
+           this.form.typeId = this.ShuxingForm.attId ;
+           this.form.SPUDatas = JSON.stringify(SPUDataForm);
+           debugger;
+           this.form.SKUDatas = JSON.stringify(this.tableSkuData);
+           axios.post("http://localhost:8080/api/shangpin/addShangPin",qs.stringify(this.form)).then(res=>{
+             this.$message.success("新增成功")
+
+           }).catch(err=>{
+
+           })
+        },
         SKUChange:function(){
+
+          this.tableSkuData = [];
+          this.cols=[];
           console.log(this.SKUData);
+          let dikaParams = [];   //笛卡尔迪的参数
+
           let DkedStatus = true;   //笛卡尔迪的触发状态 默认是触发的
           for (let i = 0; i <this.SKUData.length ; i++) {
+
+
+             debugger;
+             //把值放在表头中
+             this.cols.push({"id":this.SKUData[i].id,"nameChina":this.SKUData[i].nameChina,"name":this.SKUData[i].name});
+             //将选中的复选框添加到笛卡尔迪的参数中
+             dikaParams.push(this.SKUData[i].checkStatus)
+
               if (this.SKUData[i].checkStatus.length==0){
 
-                //console.log(this.SKUData[i].nameChina)
 
                   DkedStatus = false;
                   break;
@@ -235,45 +296,45 @@
           }
           if (DkedStatus==true){
 
-            let array = this.discarts(this.SKUData)
-            console.log(array);
+            let array = this.calcDescartes(dikaParams)
+            for (let i = 0; i <array.length ; i++) {
+                //["黄色","XL"]
+              let valuesAttr=array[i];
+              let  jsonData={};
+              if(typeof valuesAttr =="object"){
+                for (let j = 0; j <array[i].length ; j++) {
+                  //遍历笛卡尔积 的每一项   [红色,16g]  cols:[{"id":1,"name":color ,"nameChina":颜色}]
+                  let key = this.cols[j].name;
+                  jsonData[key] = array[i][j];
+                  debugger
+                }
+              }else{
+
+                let key = this.cols[0].name;
+                jsonData[key] = valuesAttr;
+              }
+
+              this.tableSkuData.push(jsonData);
+              debugger;
+            }
+
           }
           this.tableShow = DkedStatus;
 
-        },
-        discarts:function() {
-          //笛卡尔积
-          var twodDscartes = function (a, b) {
-            var ret = [];
-            for (var i = 0; i < a.length; i++) {
-              for (var j = 0; j < b.length; j++) {
-                ret.push(ft(a[i], b[j]));
-              }
-            }
-            return ret;
-          }
-          var ft = function (a, b) {
-            if (!(a instanceof Array))
-              a = [a];
-            var ret = a.slice(0);
-            ret.push(b);
-            return ret;
-          }
-          //多个一起做笛卡尔积
-          return (function (data) {
-            var len = data.length;
-            if (len == 0)
-              return [];
-            else if (len == 1)
-              return data[0];
-            else {
-              var r = data[0];
-              for (var i = 1; i < len; i++) {
-                r = twodDscartes(r, data[i]);
-              }
-              return r;
-            }
-          })(arguments.length > 1 ? arguments : arguments[0]);
+        },//笛卡儿积
+        calcDescartes:function(array) {
+          if (array.length < 2) return array[0] || [];
+          return [].reduce.call(array, function (col, set) {
+            var res = [];
+            col.forEach(function (c) {
+              set.forEach(function (s) {
+                var t = [].concat(Array.isArray(c) ? c : [c]);
+                t.push(s);
+                res.push(t);
+              })
+            });
+            return res;
+          });
         },
         getShuxing:function(typeId){
           this.SKUData=[];
@@ -282,6 +343,7 @@
           axios.get("http://localhost:8080/api/shuxing/selectShuxingBytypeId?typeId="+typeId).then(res=>{
 
             console.log(res)
+            debugger;
             let shuxingDatas = res.data.data;
 
             if (shuxingDatas.length>0) {
@@ -294,11 +356,14 @@
                     axios.get("http://localhost:8080/api/sxvalue/getData?attId="+shuxingDatas[i].id).then(res=>{
                       debugger;
                       console.log(res);
+                      //属性对应的属性值的数据
                       shuxingDatas[i].value = res.data.data;
+                      //绑定一个选中状态 用来出表格效果
                       shuxingDatas[i].checkStatus = [];
 
 
                       this.SKUData.push(shuxingDatas[i])
+                      debugger;
                     })
                   }else {
                     this.SKUData.push(shuxingDatas[i])
@@ -311,6 +376,9 @@
                 else{
 
                   if (shuxingDatas[i].type!=3){
+
+                    shuxingDatas[i].checkStatus = []
+
                     axios.get("http://localhost:8080/api/sxvalue/getData?attId="+shuxingDatas[i].id).then(res=>{
                       shuxingDatas[i].value = res.data.data;
 

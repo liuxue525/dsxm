@@ -38,6 +38,10 @@ export default new Router({
           path: '/addSp',
           component: () => import(/* webpackChunkName: "dashboard" */ '../components/shop/AddShangPin.vue'),
           meta: { title: '添加商品' }
+        },{
+          path: '/ShangPinWh',
+          component: () => import(/* webpackChunkName: "dashboard" */ '../components/shop/ShangPinWh.vue'),
+          meta: { title: '商品维护' }
         }
 
       ]

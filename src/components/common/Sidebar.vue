@@ -81,6 +81,10 @@ export default {
                   {
                     index: 'addSp',
                     title: '商品新增'
+                  },
+                  {
+                    index: 'ShangPinWh',
+                    title: '商品维护'
                   }
                   ]
               },
